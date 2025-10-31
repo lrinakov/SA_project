@@ -1,0 +1,270 @@
+openapi: 3.0.3
+info:
+  title: Fake Project API
+  version: 1.0.0
+  description: |
+    API для управления проектами и задачами.
+    Позволяет создавать, просматривать, завершать задачи, получать аналитику и рекомендации.
+servers:
+  - url: http://localhost:5000
+    description: Локальный сервер разработки
+
+paths:
+  /:
+    get:
+      summary: Главная страница
+      responses:
+        '200':
+          description: Успешный ответ с HTML контентом
+          content:
+            text/html:
+              schema:
+                type: string
+                example: "<h3>You have entered the main page. You are authorized as user.</h3>"
+
+  /project:
+    post:
+      summary: Создать новую задачу
+      description: Создает новую задачу с обязательными полями `p_id` и `name`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FakeCreate'
+      responses:
+        '201':
+          description: Задача успешно создана
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Задача успешно создана
+                  p_id:
+                    type: integer
+                    example: 1
+        '400':
+          description: Ошибка валидации входных данных
+
+  /project/{pr_id}:
+    get:
+      summary: Получить информацию о задаче
+      parameters:
+        - name: pr_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID проекта (p_id)
+      responses:
+        '200':
+          description: Данные о проекте
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fake'
+        '404':
+          description: Проект не найден
+
+  /project/{pr_id}/complete:
+    patch:
+      summary: Завершить задачу
+      description: Обновляет статус задачи на "Завершена" и добавляет данные о состоянии пользователя.
+      parameters:
+        - name: pr_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID проекта
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserState'
+      responses:
+        '200':
+          description: Задача успешно завершена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  p_id:
+                    type: integer
+                    example: 1
+                  status:
+                    type: string
+                    example: Завершена
+                  user_feedback:
+                    $ref: '#/components/schemas/UserState'
+        '400':
+          description: Ошибка валидации данных
+        '404':
+          description: Задача не найдена
+
+  /analytics:
+    get:
+      summary: Получить аналитику за последние 7 дней
+      responses:
+        '200':
+          description: Аналитика по завершённым задачам
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period:
+                    type: object
+                    properties:
+                      start:
+                        type: string
+                        format: date
+                      end:
+                        type: string
+                        format: date
+                  daily_load:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        tasks_completed:
+                          type: integer
+                        average_difficulty:
+                          type: number
+                  insights:
+                    type: object
+                    properties:
+                      most_productive_day:
+                        type: string
+                      avg_difficulty:
+                        type: number
+                      avg_tasks_per_day:
+                        type: number
+                      user_state:
+                        type: string
+                  diagram:
+                    type: string
+                    example: В будущем здесь появится автоматически генерируемая визуализация аналитики.
+        '500':
+          description: Ошибка сервера
+
+  /recommendations:
+    get:
+      summary: Получить рекомендации по продуктивности
+      responses:
+        '200':
+          description: Рекомендации пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommendations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        category:
+                          type: string
+                          example: Отдых
+                        advice:
+                          type: string
+                          example: Добавьте день отдыха после тяжелых задач.
+
+components:
+  schemas:
+    Fake:
+      type: object
+      properties:
+        p_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Завершить отчёт
+        status:
+          type: string
+          enum: ["В Ожидании", "В Работе", "Завершена"]
+          example: В Работе
+        subtasks:
+          type: array
+          items:
+            type: string
+          example: ["Собрать данные", "Написать текст"]
+        difficulty:
+          type: integer
+          minimum: 0
+          maximum: 10
+          example: 5
+        date:
+          type: string
+          format: date
+          example: 2025-10-30
+        deadline:
+          type: string
+          format: date
+          example: 2025-11-05
+        physical_state:
+          type: string
+          enum: ["Отдохнувший", "Уставший", "Энергичный", "Сонный", "Нормальный"]
+        mood:
+          type: string
+          enum: ["Хорошее", "Нейтральное", "Плохое"]
+        stress_level:
+          type: integer
+          minimum: 0
+          maximum: 10
+
+    FakeCreate:
+      type: object
+      required: [p_id, name]
+      properties:
+        p_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Завершить проект
+        status:
+          type: string
+          example: В Ожидании
+        subtasks:
+          type: array
+          items:
+            type: string
+        difficulty:
+          type: integer
+          example: 3
+        date:
+          type: string
+          format: date
+          example: 2025-10-30
+        deadline:
+          type: string
+          format: date
+          example: 2025-11-05
+
+    UserState:
+      type: object
+      properties:
+        physical_state:
+          type: string
+          enum: ["Отдохнувший", "Уставший", "Энергичный", "Сонный", "Нормальный"]
+          example: Энергичный
+        mood:
+          type: string
+          enum: ["Хорошее", "Нейтральное", "Плохое"]
+          example: Хорошее
+        stress_level:
+          type: integer
+          minimum: 0
+          maximum: 10
+          example: 4
