@@ -1,13 +1,10 @@
 openapi: 3.0.3
 info:
-  title: Fake Project API
+  title: API hse
   version: 1.0.0
   description: |
-    API для управления проектами и задачами.
+    API для планера с трекингом когнитивной нагрузки.
     Позволяет создавать, просматривать, завершать задачи, получать аналитику и рекомендации.
-servers:
-  - url: http://localhost:5000
-    description: Локальный сервер разработки
 
 paths:
   /:
